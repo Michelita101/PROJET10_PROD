@@ -48,3 +48,7 @@ __pycache__/
 __blobstorage__
 __queuestorage__
 __azurite_db*__.json
+
+# --- Streamlit demo users (pour le cloud)
+!data/
+!data/streamlit_users_demo.parquet
