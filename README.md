@@ -1,7 +1,6 @@
 ---
 # 📰 Projet 10 – Application de recommandation de contenu
 
----
 
 Ce projet consiste à concevoir et déployer une application complète de recommandation d’articles, intégrant plusieurs moteurs de recommandation et une interface de démonstration interactive.
 
@@ -28,7 +27,7 @@ Ce projet consiste à concevoir et déployer une application complète de recomm
 
 Utilisateur  
 ⬇️  
-Application Streamlit Cloud
+Application Streamlit Cloud  
 ⬇️  
 API Azure Functions   
 ⬇️  
@@ -59,7 +58,7 @@ Azure Blob Storage
   - affichage de la réponse brute JSON (mode debug)
 
 
->⚠️ **Remarque sur ALS**
+>⚠️ **Remarque sur ALS**  
 >Le moteur ALS est implémenté.
 >Il n’est pas activé dans la version déployée sur Azure en raison des contraintes de compatibilité de la librairie `implicit` avec une architecture serverless.
 >En environnement industriel, ce moteur serait déployé via un service dédié (VM, batch ou microservice spécialisé).
@@ -89,7 +88,7 @@ PROJET10_PROD/
 ```bash
 func start
 ```
-Endpoint disponible :  
+Endpoint disponible :   
 http://localhost:7071/api/recommend
 
 ### 2. Application Streamlit
@@ -110,7 +109,7 @@ streamlit run app.py
 
 ## 🔗 Points d’entrée de l’application
 
-- **API Azure Functions (inférence)**
+- **API Azure Functions (inférence)**  
 https://p10-reco-api-michele.azurewebsites.net/api/recommend
 
 Paramètres optionnels supportés :
@@ -118,10 +117,10 @@ Paramètres optionnels supportés :
 - strategy (auto, content_based, cf_item, cf_global, hybrid)
 - top_k (nombre de recommandations)  
 
-Exemple :
+Exemple :  
 https://p10-reco-api-michele.azurewebsites.net/api/recommend?user_id=13&strategy=auto&top_k=5
 
-- Application Streamlit (interface de démonstration)
+- **Application Streamlit (interface de démonstration)**  
 https://projet10app-ghju8p6mp4zrnhgoyibnz2.streamlit.app
 
 ---
@@ -131,7 +130,7 @@ https://projet10app-ghju8p6mp4zrnhgoyibnz2.streamlit.app
 L’application Streamlit agit comme client de l'API et permet :
 - de tester les recommandations sans user_id (cold start)
 - de simuler différents profils utilisateurs
-- d’évaluer le comportement des moteurs selon la stratégie choisie
+- d’évaluer le comportement des moteurs selon la stratégie choisie  
 
 **Cette architecture permet une évolution indépendante des moteurs de recommandation, de l’API et de l’interface utilisateur.**
 
