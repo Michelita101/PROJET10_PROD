@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from azure.storage.blob import BlobServiceClient
 
-import implicit
+#import implicit
 
 import scipy.sparse
 import gzip
@@ -307,8 +307,8 @@ def recommend(
                 engine="hybrid"
             )
 
-        if strategy == "als":
-            return recommend_als_wrapper(user_id, top_k)
+        #if strategy == "als":
+            #return recommend_als_wrapper(user_id, top_k)
 
         raise ValueError(f"Unknown strategy: {strategy}")
 
@@ -325,10 +325,10 @@ def recommend(
         return recommend_cf_global(user_id, top_k)
 
     # Historique dense → ALS auto
-    if session_count >= ALS_SESSION_THRESHOLD:
-        results = recommend_als_wrapper(user_id, top_k)
-        if results:
-            return results
+    #if session_count >= ALS_SESSION_THRESHOLD:
+        #results = recommend_als_wrapper(user_id, top_k)
+        #if results:
+            #return results
         # si ALS échoue, on continue vers hybrid
 
     # Hybrid MVP par défaut

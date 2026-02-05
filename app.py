@@ -266,14 +266,22 @@ with st.sidebar:
             st.warning("Le user_id saisi doit être un entier.")
 
     elif selected_demo_user != "(aucun)":
-        user_id = int(selected_demo_user)
-        
+        user_id = int(selected_demo_user)    
+
+    AVAILABLE_ENGINES = [
+        "auto",
+        "content_based",
+        "cf_item",
+        "cf_global",
+        "hybrid",
+        # "als"  # désactivé : non déployable sur Azure Functions (implicit)
+    ]   
 
     st.divider()
     st.subheader("🧠 Stratégie")
     strategy = st.selectbox(
         "strategy",
-        options=["auto", "content_based", "cf_item", "cf_global", "hybrid", "als"],
+        options=AVAILABLE_ENGINES,
         index=0,
         help="auto = routing MVP. Les autres = debug / démonstration.",
     )
