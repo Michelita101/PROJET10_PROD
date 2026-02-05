@@ -51,4 +51,4 @@ __azurite_db*__.json
 
 # --- Streamlit demo users (pour le cloud)
 !data/
-!data/streamlit_users_demo.parquet
+!data/streamlit_users_demo.parquetlegacy/

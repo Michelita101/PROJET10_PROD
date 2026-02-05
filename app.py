@@ -220,8 +220,8 @@ with st.sidebar:
 
     base_url = st.text_input(
         "URL de l’API (Azure Function / local)",
-        value="http://localhost:7071/api/recommend",
-        help="En local: http://localhost:7071/api/recommend. En prod: l’URL Azure Functions.",
+        value="https://p10-reco-api-michele.azurewebsites.net/api/recommend",
+        help="En local: http://localhost:7071/api/recommend. En prod: https://p10-reco-api-michele.azurewebsites.net/api/recommend.",
     )
 
     http_method = st.selectbox("Méthode HTTP", ["GET", "POST"], index=0)

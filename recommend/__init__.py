@@ -14,8 +14,6 @@ import scipy.sparse
 import gzip
 from sklearn.metrics.pairwise import cosine_similarity
 
-app = func.FunctionApp()
-
 # Configuration initiale
 BLOB_CONNECTION_STRING = os.environ.get("BLOB_STORAGE_CONNECTION_STRING")
 CONTAINER_NAME = "processed"
@@ -309,18 +307,6 @@ def recommend(
                 engine="hybrid"
             )
 
-            # Fallback CB seul
-            cb_articles, cb_scores = recommend_cb_wrapper(user_id, top_k)
-            if cb_articles:
-                return format_x_results(user_id, cb_articles, cb_scores, "content_based")
-
-            # Fallback CF seul
-            cf_articles, cf_scores = recommend_cf_wrapper(user_id, top_k)
-            if cf_articles:
-                return format_x_results(user_id, cf_articles, cf_scores, "cf_item")
-
-            return []
-
         if strategy == "als":
             return recommend_als_wrapper(user_id, top_k)
 
@@ -360,25 +346,10 @@ def recommend(
         engine="hybrid"
     )
 
-        # Fallback CB seul
-    cb_articles, cb_scores = recommend_cb_wrapper(user_id, top_k)
-    if cb_articles:
-        return format_x_results(user_id, cb_articles, cb_scores, "content_based")
-
-        # Fallback CF seul
-    cf_articles, cf_scores = recommend_cf_wrapper(user_id, top_k)
-    if cf_articles:
-        return format_x_results(user_id, cf_articles, cf_scores, "cf_item")
-
-        # Cas extrême
-    return []
-
 
 # Point d'entrée API, endpoint HTTP
 
-@app.function_name(name="recommend")
-@app.route(route="recommend", methods=["GET", "POST"], auth_level=func.AuthLevel.ANONYMOUS)
-def recommend_endpoint(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         load_artifacts()
         user_id = req.params.get("user_id")
