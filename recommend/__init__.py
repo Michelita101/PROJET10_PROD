@@ -25,11 +25,11 @@ FILES_TO_LOAD = {
     "articles_df": "articles_metadata_min.csv",
     "embeddings_cb": "articles_embeddings_cb.npy",
     "item_similarity_df": "item_similarity_df.parquet",
-    "model_als": "model_als.pkl",
-    "user_item_sparse": "user_item_sparse.npz",
+    # "model_als": "model_als.pkl",
+    # "user_item_sparse": "user_item_sparse.npz",
     "user_item_matrix": "user_item_matrix.csv.gz",
-    "user_id_map": "user_id_map.pkl",
-    "item_id_map": "item_id_map.pkl"
+    # "user_id_map": "user_id_map.pkl",
+    # "item_id_map": "item_id_map.pkl"
 }
 
 # Variables globales
@@ -51,7 +51,8 @@ artifacts_loaded = False
 def load_artifacts():
     global artifacts_loaded
     global trending_items, interactions_df, articles_df, embeddings_cb, item_similarity_df
-    global model_als, user_item_sparse, user_id_map, item_id_map, user_item_matrix
+    global user_item_matrix
+    # global model_als, user_item_sparse, user_id_map, item_id_map, 
 
     if artifacts_loaded:
         return
@@ -86,19 +87,19 @@ def load_artifacts():
                 globals()[key] = np.load(io.BytesIO(blob_data), allow_pickle=True)
 
             # Numpy .npz
-            elif key == "user_item_sparse":
-                with open("/tmp/user_item_sparse.npz", "wb") as f:
-                    f.write(blob_data)
-                globals()[key] = scipy.sparse.load_npz("/tmp/user_item_sparse.npz")
+            #elif key == "user_item_sparse":
+                #with open("/tmp/user_item_sparse.npz", "wb") as f:
+                    #f.write(blob_data)
+                #globals()[key] = scipy.sparse.load_npz("/tmp/user_item_sparse.npz")
                 
             # Pickle
-            elif key in ["model_als", "user_id_map"]:
-                globals()[key] = joblib.load(io.BytesIO(blob_data))
+            #elif key in ["model_als", "user_id_map"]:
+                #globals()[key] = joblib.load(io.BytesIO(blob_data))
 
             # Pickle
-            elif key == "item_id_map":
-                item_id_map = joblib.load(io.BytesIO(blob_data))
-                globals()[key] = item_id_map
+            #elif key == "item_id_map":
+                #item_id_map = joblib.load(io.BytesIO(blob_data))
+                #globals()[key] = item_id_map
         
         artifacts_loaded = True
 
@@ -423,6 +424,8 @@ def recommend(
 def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         load_artifacts()
+        logging.warning(f"DEBUG interactions_df is None? {interactions_df is None}")
+        logging.warning(f"DEBUG embeddings_cb is None? {embeddings_cb is None}")
         user_id = req.params.get("user_id")
         strategy = req.params.get("strategy", "auto")
         top_k = int(req.params.get("top_k", 5))
