@@ -154,9 +154,20 @@ def recommend_cb_wrapper(user_id, top_k=5):
         embeddings_cb
     ).flatten()
 
-    top_indices = np.argsort(similarities)[::-1][:top_k + 1]
-    top_articles = [i for i in top_indices if i != last_click][:top_k]
-    top_scores = similarities[top_articles]
+    similarities[last_click] = -1
+
+    # Normalisation min-max
+    min_s = similarities.min()
+    max_s = similarities.max()
+
+    if max_s > min_s:
+        similarities = (similarities - min_s) / (max_s - min_s)
+    else:
+        similarities = np.zeros_like(similarities)
+
+    top_indices = np.argsort(similarities)[::-1][:top_k]
+    top_articles = top_indices.tolist()
+    top_scores = similarities[top_indices]
 
     return top_articles, top_scores
 
@@ -171,8 +182,20 @@ def recommend_cf_wrapper(user_id, top_k=5):
         return [], []
 
     # Somme des similarités de tous les articles cliqués
-    scores = item_similarity_df.loc[clicked_articles].sum().sort_values(ascending=False)
+    scores = item_similarity_df.loc[clicked_articles].sum()
+
     scores = scores.drop(labels=clicked_articles, errors='ignore')  # retirer les articles déjà vus
+
+    # Normalisation min-max
+    min_s = scores.min()
+    max_s = scores.max()
+    if max_s > min_s:
+        scores = (scores - min_s) / (max_s - min_s)
+    else:
+        scores = scores * 0
+
+    # Tri
+    scores = scores.sort_values(ascending=False)
 
     top_articles = scores.head(top_k).index.tolist()
     top_scores = scores.head(top_k).values.tolist()
@@ -216,6 +239,19 @@ def recommend_als_wrapper(user_id, top_k=5):
                 articles.append(int(reverse_map[int(i)]))
                 scores_clean.append(float(score))
 
+        # Normalisation min-max ALS
+        if scores_clean:
+            min_s = min(scores_clean)
+            max_s = max(scores_clean)
+
+            if max_s > min_s:
+                scores_clean = [
+                    (s - min_s) / (max_s - min_s)
+                    for s in scores_clean
+                ]
+            else:
+                scores_clean = [0 for _ in scores_clean]
+
         return format_x_results(
             user_id=user_id,
             article_ids=articles,
@@ -237,21 +273,44 @@ def get_user_session_count(user_id, interactions_df):
     ]
     return user_sessions.nunique()
 
-def merge_hybrid(cb_articles, cb_scores, cf_articles, cf_scores, top_k):
-    articles_all = cb_articles + cf_articles
-    scores_all = list(cb_scores) + list(cf_scores)
+def get_user_click_count(user_id, interactions_df):
+    if user_id is None:
+        return 0
+    return len(
+        interactions_df[interactions_df["user_id"] == user_id]
+    )
 
-    seen = set()
-    articles = []
-    scores = []
+def merge_hybrid(cb_articles, cb_scores, cf_articles, cf_scores, top_k, click_count):
 
-    for a, s in zip(articles_all, scores_all):
-        if a not in seen:
-            articles.append(int(a))
-            scores.append(float(s))
-            seen.add(a)
-        if len(articles) >= top_k:
-            break
+    # Pondérations (modifiables plus tard dynamiquement)
+    if click_count < 3:
+        w_cb = 0.7
+        w_cf = 0.3
+    else:
+        w_cb = 0.5
+        w_cf = 0.5
+
+    scores_dict = {}
+
+    # Ajouter scores CB
+    for a, s in zip(cb_articles, cb_scores):
+        scores_dict[a] = w_cb * s
+    #Ajouter scores CF
+    for a, s in zip(cf_articles, cf_scores):
+        if a in scores_dict:
+            scores_dict[a] += w_cf * s
+        else:
+            scores_dict[a] = w_cf * s
+
+    # Tri final
+    sorted_items = sorted(
+        scores_dict.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    articles = [int(a) for a, _ in sorted_items[:top_k]]
+    scores = [float(s) for _, s in sorted_items[:top_k]]
 
     return articles, scores
 
@@ -266,6 +325,9 @@ def recommend(
         user_id = int(user_id)
     except (TypeError, ValueError):
         user_id = None
+
+    # Nombre de sessions utilisateur
+    click_count = get_user_click_count(user_id, interactions_df)
 
     # 1er cas : STRATÉGIES FORCÉES
 
@@ -293,11 +355,11 @@ def recommend(
             return recommend_cf_global(user_id, top_k)
 
         if strategy == "hybrid":
-            cb_articles, cb_scores = recommend_cb_wrapper(user_id, top_k=3)
-            cf_articles, cf_scores = recommend_cf_wrapper(user_id, top_k=2)
+            cb_articles, cb_scores = recommend_cb_wrapper(user_id, top_k=top_k)
+            cf_articles, cf_scores = recommend_cf_wrapper(user_id, top_k=top_k)
 
             articles, scores = merge_hybrid(
-                cb_articles, cb_scores, cf_articles, cf_scores, top_k
+                cb_articles, cb_scores, cf_articles, cf_scores, top_k, click_count
             )
 
             return format_x_results(
@@ -315,28 +377,37 @@ def recommend(
 
     # 2e cas : STRATÉGIE AUTO
 
-    ALS_SESSION_THRESHOLD = 10
+    ALS_CLICK_THRESHOLD = 10
 
-    # Nombre de sessions utilisateur
-    session_count = get_user_session_count(user_id, interactions_df)
-
-    # Cold start : user inconnu ou sans clic
-    if session_count == 0:
+    # O clic = Cold start : user inconnu ou sans clic
+    if click_count == 0:
         return recommend_cf_global(user_id, top_k)
 
+    # 1 clic = Content Based pur
+    if click_count == 1:
+        articles, scores = recommend_cb_wrapper(user_id, top_k)
+        return format_x_results(
+            user_id=user_id,
+            article_ids=articles,
+            scores=scores,
+            engine="content_based"
+        )
+
+    # ALS désactivé en production (incompatibilité Azure implicit)
+    # Architecture prête à réactivation en environnement compatible
     # Historique dense → ALS auto
-    #if session_count >= ALS_SESSION_THRESHOLD:
+    #if click_count >= ALS_CLICK_THRESHOLD:
         #results = recommend_als_wrapper(user_id, top_k)
         #if results:
             #return results
         # si ALS échoue, on continue vers hybrid
 
-    # Hybrid MVP par défaut
-    cb_articles, cb_scores = recommend_cb_wrapper(user_id, top_k=3)
-    cf_articles, cf_scores = recommend_cf_wrapper(user_id, top_k=2)
+    # Cas intermédiaire = Hybrid
+    cb_articles, cb_scores = recommend_cb_wrapper(user_id, top_k=top_k)
+    cf_articles, cf_scores = recommend_cf_wrapper(user_id, top_k=top_k)
 
     articles, scores = merge_hybrid(
-        cb_articles, cb_scores, cf_articles, cf_scores, top_k
+        cb_articles, cb_scores, cf_articles, cf_scores, top_k, click_count
     )
         
     return format_x_results(
