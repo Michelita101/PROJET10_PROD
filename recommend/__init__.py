@@ -1,30 +1,19 @@
-import logging
-logging.warning("=== MODULE IMPORT START ===")
 import azure.functions as func
-logging.warning("import azure.functions OK")
 import json
-logging.warning("import json OK")
 import os
-logging.warning("import os OK")
 import io
-logging.warning("import io OK")
 import joblib
-logging.warning("import joblib OK")
+import logging
 import pandas as pd
-logging.warning("import pandas OK")
 import numpy as np
-logging.warning("import numpy OK")
 from azure.storage.blob import BlobServiceClient
-logging.warning("import BlobServiceClient OK")
 
 #import implicit
 
 import scipy.sparse
-logging.warning("import scipy.sparse OK")
 import gzip
-logging.warning("import gzip OK")
 from sklearn.metrics.pairwise import cosine_similarity
-logging.warning("import sklearn OK")
+
 
 # Configuration initiale
 BLOB_CONNECTION_STRING = os.environ.get("BLOB_STORAGE_CONNECTION_STRING")
@@ -434,7 +423,6 @@ def recommend(
 # Point d'entrée API, endpoint HTTP
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    raise Exception("VERSION TEST 123")
     try:
         load_artifacts()
         logging.warning(f"DEBUG interactions_df is None? {interactions_df is None}")
