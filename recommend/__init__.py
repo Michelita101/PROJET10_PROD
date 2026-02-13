@@ -430,6 +430,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         strategy = req.params.get("strategy", "auto")
         top_k = int(req.params.get("top_k", 5))
 
+        if interactions_df is None:
+            return func.HttpResponse(
+                json.dumps({"error": "interactions_df is None"}),
+                status_code=500
+            )
+
         # Normalisation
         try:
             user_id = int(user_id)
