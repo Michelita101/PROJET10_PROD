@@ -422,6 +422,7 @@ def recommend(
 # Point d'entrée API, endpoint HTTP
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    logging.warning("=== FUNCTION STARTED ===")
     try:
         load_artifacts()
         logging.warning(f"DEBUG interactions_df is None? {interactions_df is None}")
@@ -429,12 +430,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         user_id = req.params.get("user_id")
         strategy = req.params.get("strategy", "auto")
         top_k = int(req.params.get("top_k", 5))
-
-        if interactions_df is None:
-            return func.HttpResponse(
-                json.dumps({"error": "interactions_df is None"}),
-                status_code=500
-            )
 
         # Normalisation
         try:
