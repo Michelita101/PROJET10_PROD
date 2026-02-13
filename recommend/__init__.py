@@ -434,6 +434,7 @@ def recommend(
 # Point d'entrée API, endpoint HTTP
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    raise Exception("VERSION TEST 123")
     try:
         load_artifacts()
         logging.warning(f"DEBUG interactions_df is None? {interactions_df is None}")
