@@ -6,6 +6,24 @@ Ce projet consiste à concevoir et déployer une application complète de recomm
 
 ---
 
+## 🔗 Accès 
+
+L’application est entièrement déployée et accessible en ligne :
+
+- **Interface utilisateur (Streamlit)**  
+https://projet10app-ghju8p6mp4zrnhgoyibnz2.streamlit.app  
+
+- **API de recommandation (Azure Functions)**  
+https://p10-reco-api-michele.azurewebsites.net/api/recommend  
+
+- **Repository GitHub (code source complet)**  
+https://github.com/Michelita101/PROJET10_PROD  
+
+Exemple d’appel API :  
+https://p10-reco-api-michele.azurewebsites.net/api/recommend?user_id=13&strategy=auto&top_k=5
+
+---
+
 ## 🎯 Objectifs
 - Construire plusieurs moteurs de recommandation :
   - Content-Based Filtering
